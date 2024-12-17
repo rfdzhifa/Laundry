@@ -9,26 +9,14 @@ package laundry;
  *
  * @author arsan
  */
-public class Employee extends Person {
-    private String role;
+public class Employee  {
     private String username;
     private String password;
 
     // Constructor
-    public Employee(String id, String name, String phone, String role, String username, String password) {
-        super(id, name, phone);
-        this.role = role;
+    public Employee(String username, String password) {
         this.username = username;
         this.password = password;
-    }
-
-    // Getter dan Setter
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public String getUsername() {
