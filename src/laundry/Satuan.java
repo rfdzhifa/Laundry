@@ -8,6 +8,14 @@ package laundry;
  *
  * @author LENOVO
  */
-public class Satuan {
+public class Satuan extends Service{
+    
+    public Satuan(String serviceName, int duration, double price) {
+        super(serviceName, duration, price);
+    }
+    
+    public double TotalPrice(double quantity) {
+        return getPrice() * quantity;
+    }
     
 }

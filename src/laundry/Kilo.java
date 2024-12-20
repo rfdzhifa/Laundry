@@ -8,6 +8,13 @@ package laundry;
  *
  * @author LENOVO
  */
-public class Kilo {
+public class Kilo extends Service {
     
+    public Kilo(String serviceName, int duration, double price) {
+        super(serviceName, duration, price);
+    }
+
+    public double TotalPrice(double weight) {
+        return getPrice() * weight;
+    }
 }
