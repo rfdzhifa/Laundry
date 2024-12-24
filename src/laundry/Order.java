@@ -141,10 +141,20 @@ public class Order extends javax.swing.JFrame {
         btnHapus.setBackground(new java.awt.Color(204, 204, 204));
         btnHapus.setForeground(new java.awt.Color(51, 51, 51));
         btnHapus.setText("Hapus");
+        btnHapus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnHapusActionPerformed(evt);
+            }
+        });
 
         btnUbah.setBackground(new java.awt.Color(204, 204, 204));
         btnUbah.setForeground(new java.awt.Color(51, 51, 51));
         btnUbah.setText("Ubah");
+        btnUbah.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUbahActionPerformed(evt);
+            }
+        });
 
         btnTambah.setBackground(new java.awt.Color(204, 204, 204));
         btnTambah.setForeground(new java.awt.Color(51, 51, 51));
@@ -251,7 +261,7 @@ public class Order extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Name", "Date", "Quantity", "Service", "Duration", "Status", "Price"
+                "id ", "Name", "Date", "Quantity", "Service", "Duration", "Status", "Price"
             }
         ));
         jScrollPane1.setViewportView(tblOrder);
@@ -390,6 +400,109 @@ public class Order extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnTambahActionPerformed
 
+    private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUbahActionPerformed
+    int selectedRow = tblOrder.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Pilih data yang ingin diubah di tabel.");
+        return;
+    }
+
+    // Ambil data dari form
+    String customerName = txtCustomer.getText().trim();
+    String dateInput = txtDate.getText().trim();
+    String quantityText = txtQuantityWeight.getText().trim();
+    String serviceName = (String) txtService.getSelectedItem();
+    String status = (String) txtStatus.getSelectedItem();
+
+    // Validasi input kosong
+    if (customerName.isEmpty() || dateInput.isEmpty() || quantityText.isEmpty() || serviceName == null || status == null) {
+        JOptionPane.showMessageDialog(this, "Semua kolom harus diisi.");
+        return;
+    }
+
+    // Validasi format tanggal
+    if (!validateDate(dateInput)) {
+        JOptionPane.showMessageDialog(this, "Format tanggal harus dd/MM/yyyy.");
+        return;
+    }
+
+    // Validasi angka untuk quantity
+    double quantity;
+    try {
+        quantity = Double.parseDouble(quantityText);
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(this, "Quantity harus berupa angka.");
+        return;
+    }
+
+    // Konversi tanggal ke format MySQL
+    String mysqlDate = convertToMySQLDate(dateInput);
+    if (mysqlDate == null) {
+        JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat memproses tanggal.");
+        return;
+    }
+
+    // Ambil ID dari tabel
+    String orderID = tblOrder.getValueAt(selectedRow, 0).toString();
+
+    // Simpan perubahan ke database
+    try (Connection con = ConnectionDatabase.getConnection()) {
+        String query = "UPDATE orders SET customerName = ?, date = ?, service = ?, quantity = ?, status = ? WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setString(1, customerName);
+            ps.setString(2, mysqlDate);
+            ps.setString(3, serviceName);
+            ps.setDouble(4, quantity);
+            ps.setString(5, status);
+            ps.setString(6, orderID);
+
+            int updatedRows = ps.executeUpdate();
+            if (updatedRows > 0) {
+                JOptionPane.showMessageDialog(this, "Data berhasil diubah!");
+                loadTableData(); // Perbarui data di tabel setelah perubahan
+            } else {
+                JOptionPane.showMessageDialog(this, "Data tidak ditemukan atau gagal diubah.");
+            }
+        }
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Gagal mengubah data! Pesan error: " + ex.getMessage());
+    }
+    }//GEN-LAST:event_btnUbahActionPerformed
+
+    private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
+        // Ambil baris yang dipilih dari tabel
+    int selectedRow = tblOrder.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Pilih data di tabel terlebih dahulu.");
+        return;
+    }
+
+    // Konfirmasi penghapusan
+    int confirm = JOptionPane.showConfirmDialog(this, "Apakah Anda yakin ingin menghapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+    if (confirm != JOptionPane.YES_OPTION) {
+        return;
+    }
+
+    // Ambil ID dari baris yang dipilih
+    String selectedId = tblOrder.getValueAt(selectedRow, 0).toString();
+
+    // Hapus dari database
+    try (Connection con = ConnectionDatabase.getConnection()) {
+        String query = "DELETE FROM orders WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setString(1, selectedId);
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Data berhasil dihapus!");
+
+            // Perbarui tabel
+            loadTableData();
+        }
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Gagal menghapus data! Pesan error: " + ex.getMessage());
+    }
+
+    }//GEN-LAST:event_btnHapusActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -486,10 +599,13 @@ public class Order extends javax.swing.JFrame {
         model.setRowCount(0); // Hapus data lama di tabel
 
         try (Connection con = ConnectionDatabase.getConnection()) {
-            String query = "SELECT customerName, date, service, quantity, duration, status, price FROM orders";
-            try (PreparedStatement ps = con.prepareStatement(query); ResultSet rs = ps.executeQuery()) {
+            String query = "SELECT * FROM orders";
+            try (PreparedStatement ps = con.prepareStatement(query); 
+                    ResultSet rs = ps.executeQuery()) {
+               
                 while (rs.next()) {
                     model.addRow(new Object[]{
+                        rs.getString("id"),
                         rs.getString("customerName"),
                         rs.getString("date"),
                         rs.getString("service"),
@@ -505,6 +621,17 @@ public class Order extends javax.swing.JFrame {
         }
     }
 
+    private void tblOrderMouseClicked(java.awt.event.MouseEvent evt) {                                         
+    // Ambil data dari tabel saat baris diklik
+    int selectedRow = tblOrder.getSelectedRow();
+    if (selectedRow != -1) {
+        txtCustomer.setText(tblOrder.getValueAt(selectedRow, 0).toString());
+        txtDate.setText(tblOrder.getValueAt(selectedRow, 1).toString());
+        txtQuantityWeight.setText(tblOrder.getValueAt(selectedRow, 2).toString());
+        txtService.setSelectedItem(tblOrder.getValueAt(selectedRow, 3).toString());
+        txtStatus.setSelectedItem(tblOrder.getValueAt(selectedRow, 5).toString());
+    }
+}
     
     private void addListeners(){
         txtService.addActionListener(e -> updatePriceAndDuration());
