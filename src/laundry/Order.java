@@ -385,6 +385,7 @@ public class Order extends javax.swing.JFrame {
                     ps.executeUpdate();
                     JOptionPane.showMessageDialog(this, "Data berhasil ditambahkan!");
                     loadTableData();
+                    clearForm();
                 }
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, "Gagal menambahkan data! Pesan error: " + ex.getMessage());
@@ -459,7 +460,8 @@ public class Order extends javax.swing.JFrame {
             int updatedRows = ps.executeUpdate();
             if (updatedRows > 0) {
                 JOptionPane.showMessageDialog(this, "Data berhasil diubah!");
-                loadTableData(); // Perbarui data di tabel setelah perubahan
+                loadTableData();
+                clearForm();
             } else {
                 JOptionPane.showMessageDialog(this, "Data tidak ditemukan atau gagal diubah.");
             }
@@ -686,5 +688,13 @@ public class Order extends javax.swing.JFrame {
     
     private boolean validateDate(String dateString) {
         return dateString.matches("\\d{2}/\\d{2}/\\d{4}");
+    }
+    
+    private void clearForm(){
+        txtCustomer.setText("");
+        txtDate.setText("");
+        txtService.setSelectedIndex(0);
+        txtQuantityWeight.setText("");
+        txtStatus.setSelectedIndex(0);
     }
 }
