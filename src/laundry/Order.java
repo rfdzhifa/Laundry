@@ -26,6 +26,7 @@ public class Order extends javax.swing.JFrame {
         loadServices();
         loadTableData();
         addListeners();
+        tblOrderMouseClicked();
         setVisible(true);
     }
 
@@ -109,7 +110,7 @@ public class Order extends javax.swing.JFrame {
         });
 
         jLabel5.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel5.setText("Date (dd/mm/yyyy)");
+        jLabel5.setText("Date (yyy-mm-dd)");
 
         jLabel6.setForeground(new java.awt.Color(51, 51, 51));
         jLabel6.setText("Status");
@@ -360,14 +361,7 @@ public class Order extends javax.swing.JFrame {
 
             // Validasi format tanggal
             if (!validateDate(dateInput)) {
-                JOptionPane.showMessageDialog(this, "Format tanggal harus dd/MM/yyyy.");
-                return;
-            }
-
-            // Konversi tanggal ke format MySQL
-            String mysqlDate = convertToMySQLDate(dateInput);
-            if (mysqlDate == null) {
-                JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat memproses tanggal.");
+                JOptionPane.showMessageDialog(this, "Format tanggal harus yyyy-MM-dd.");
                 return;
             }
 
@@ -376,7 +370,7 @@ public class Order extends javax.swing.JFrame {
                 String query = "INSERT INTO orders (customerName, date, service, quantity, duration, status, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 try (PreparedStatement ps = con.prepareStatement(query)) {
                     ps.setString(1, customerName);
-                    ps.setString(2, mysqlDate);
+                    ps.setString(2, dateInput);
                     ps.setString(3, serviceName);
                     ps.setDouble(4, quantity);
                     ps.setInt(5, duration);
@@ -390,151 +384,115 @@ public class Order extends javax.swing.JFrame {
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, "Gagal menambahkan data! Pesan error: " + ex.getMessage());
             }
-            
-            System.out.println("Customer Name: " + customerName);
-            System.out.println("Date: " + mysqlDate);
-            System.out.println("Service: " + serviceName);
-            System.out.println("Quantity: " + quantity);
-            System.out.println("Duration: " + duration);
-            System.out.println("Status: " + status);
-            System.out.println("Price: " + price);
         }
     }//GEN-LAST:event_btnTambahActionPerformed
 
     private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUbahActionPerformed
-    int selectedRow = tblOrder.getSelectedRow();
-    if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(this, "Pilih data yang ingin diubah di tabel.");
-        return;
-    }
-
-    // Ambil data dari form
-    String customerName = txtCustomer.getText().trim();
-    String dateInput = txtDate.getText().trim();
-    String quantityText = txtQuantityWeight.getText().trim();
-    String serviceName = (String) txtService.getSelectedItem();
-    String status = (String) txtStatus.getSelectedItem();
-
-    // Validasi input kosong
-    if (customerName.isEmpty() || dateInput.isEmpty() || quantityText.isEmpty() || serviceName == null || status == null) {
-        JOptionPane.showMessageDialog(this, "Semua kolom harus diisi.");
-        return;
-    }
-
-    // Validasi format tanggal
-    if (!validateDate(dateInput)) {
-        JOptionPane.showMessageDialog(this, "Format tanggal harus dd/MM/yyyy.");
-        return;
-    }
-
-    // Validasi angka untuk quantity
-    double quantity;
-    try {
-        quantity = Double.parseDouble(quantityText);
-    } catch (NumberFormatException e) {
-        JOptionPane.showMessageDialog(this, "Quantity harus berupa angka.");
-        return;
-    }
-
-    // Konversi tanggal ke format MySQL
-    String mysqlDate = convertToMySQLDate(dateInput);
-    if (mysqlDate == null) {
-        JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat memproses tanggal.");
-        return;
-    }
-
-    // Ambil ID dari tabel
-    String orderID = tblOrder.getValueAt(selectedRow, 0).toString();
-
-    // Simpan perubahan ke database
-    try (Connection con = ConnectionDatabase.getConnection()) {
-        String query = "UPDATE orders SET customerName = ?, date = ?, service = ?, quantity = ?, status = ? WHERE id = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setString(1, customerName);
-            ps.setString(2, mysqlDate);
-            ps.setString(3, serviceName);
-            ps.setDouble(4, quantity);
-            ps.setString(5, status);
-            ps.setString(6, orderID);
-
-            int updatedRows = ps.executeUpdate();
-            if (updatedRows > 0) {
-                JOptionPane.showMessageDialog(this, "Data berhasil diubah!");
-                loadTableData();
-                clearForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Data tidak ditemukan atau gagal diubah.");
-            }
+        int selectedRow = tblOrder.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih data yang ingin diubah di tabel.");
+            return;
         }
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Gagal mengubah data! Pesan error: " + ex.getMessage());
-    }
+
+        // Ambil data dari form
+        String customerName = txtCustomer.getText().trim();
+        String dateInput = txtDate.getText().trim();
+        String quantityText = txtQuantityWeight.getText().trim();
+        String serviceName = (String) txtService.getSelectedItem();
+        String status = (String) txtStatus.getSelectedItem();
+
+        // Validasi input kosong
+        if (customerName.isEmpty() || dateInput.isEmpty() || quantityText.isEmpty() || serviceName == null || status == null) {
+            JOptionPane.showMessageDialog(this, "Semua kolom harus diisi.");
+            return;
+        }
+
+        // Validasi format tanggal
+        if (!validateDate(dateInput)) {
+            JOptionPane.showMessageDialog(this, "Format tanggal harus yyyy-MM-dd.");
+            return;
+        }
+
+        // Validasi angka untuk quantity
+        double quantity;
+        try {
+            quantity = Double.parseDouble(quantityText);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Quantity harus berupa angka.");
+            return;
+        }
+
+        // Ambil ID dari tabel
+        String orderID = tblOrder.getValueAt(selectedRow, 0).toString();
+
+        // Simpan perubahan ke database
+        try (Connection con = ConnectionDatabase.getConnection()) {
+            String query = "UPDATE orders SET customerName = ?, date = ?, service = ?, quantity = ?, status = ? WHERE id = ?";
+            try (PreparedStatement ps = con.prepareStatement(query)) {
+                ps.setString(1, customerName);
+                ps.setString(2, dateInput);
+                ps.setString(3, serviceName);
+                ps.setDouble(4, quantity);
+                ps.setString(5, status);
+                ps.setString(6, orderID);
+
+                int updatedRows = ps.executeUpdate();
+                if (updatedRows > 0) {
+                    JOptionPane.showMessageDialog(this, "Data berhasil diubah!");
+                    loadTableData();
+                    clearForm();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Data tidak ditemukan atau gagal diubah.");
+                }
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Gagal mengubah data! Pesan error: " + ex.getMessage());
+        }
     }//GEN-LAST:event_btnUbahActionPerformed
 
     private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
-        // Ambil baris yang dipilih dari tabel
-    int selectedRow = tblOrder.getSelectedRow();
-    if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(this, "Pilih data di tabel terlebih dahulu.");
-        return;
-    }
 
-    // Konfirmasi penghapusan
-    int confirm = JOptionPane.showConfirmDialog(this, "Apakah Anda yakin ingin menghapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
-    if (confirm != JOptionPane.YES_OPTION) {
-        return;
-    }
-
-    // Ambil ID dari baris yang dipilih
-    String selectedId = tblOrder.getValueAt(selectedRow, 0).toString();
-
-    // Hapus dari database
-    try (Connection con = ConnectionDatabase.getConnection()) {
-        String query = "DELETE FROM orders WHERE id = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setString(1, selectedId);
-            ps.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Data berhasil dihapus!");
-
-            // Perbarui tabel
-            loadTableData();
+        int selectedRow = tblOrder.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih data di tabel terlebih dahulu.");
+            return;
         }
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Gagal menghapus data! Pesan error: " + ex.getMessage());
-    }
 
+        // Konfirmasi penghapusan
+        int confirm = JOptionPane.showConfirmDialog(this, "Apakah Anda yakin ingin menghapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        // Ambil ID dari baris yang dipilih
+        String selectedId = tblOrder.getValueAt(selectedRow, 0).toString();
+
+        // Hapus dari database
+        try (Connection con = ConnectionDatabase.getConnection()) {
+            String query = "DELETE FROM orders WHERE id = ?";
+            try (PreparedStatement ps = con.prepareStatement(query)) {
+                ps.setString(1, selectedId);
+                ps.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Data berhasil dihapus!");
+                loadTableData();
+                clearForm();
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Gagal menghapus data! Pesan error: " + ex.getMessage());
+        }
     }//GEN-LAST:event_btnHapusActionPerformed
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Order.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Order.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Order.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Order.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
-        });
+         try {
+             new Order();
+         } catch (SQLException ex) {
+             JOptionPane.showMessageDialog(null, "Failed to initialize application. Error: " + ex.getMessage());
+         }
+     });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -623,17 +581,20 @@ public class Order extends javax.swing.JFrame {
         }
     }
 
-    private void tblOrderMouseClicked(java.awt.event.MouseEvent evt) {                                         
-    // Ambil data dari tabel saat baris diklik
-    int selectedRow = tblOrder.getSelectedRow();
-    if (selectedRow != -1) {
-        txtCustomer.setText(tblOrder.getValueAt(selectedRow, 0).toString());
-        txtDate.setText(tblOrder.getValueAt(selectedRow, 1).toString());
-        txtQuantityWeight.setText(tblOrder.getValueAt(selectedRow, 2).toString());
-        txtService.setSelectedItem(tblOrder.getValueAt(selectedRow, 3).toString());
-        txtStatus.setSelectedItem(tblOrder.getValueAt(selectedRow, 5).toString());
+    private void tblOrderMouseClicked() {                                         
+        tblOrder.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int selectedRow = tblOrder.getSelectedRow();
+                if (selectedRow != -1) {
+                    txtCustomer.setText(tblOrder.getValueAt(selectedRow, 1).toString());
+                    txtDate.setText(tblOrder.getValueAt(selectedRow, 2).toString());
+                    txtService.setSelectedItem(tblOrder.getValueAt(selectedRow, 3).toString());
+                    txtQuantityWeight.setText(tblOrder.getValueAt(selectedRow, 4).toString());
+                    txtStatus.setSelectedItem(tblOrder.getValueAt(selectedRow, 6).toString());
+                }
+            }
+        });
     }
-}
     
     private void addListeners(){
         txtService.addActionListener(e -> updatePriceAndDuration());
@@ -675,19 +636,15 @@ public class Order extends javax.swing.JFrame {
         }
     }
     
-    private String convertToMySQLDate(String dateString) {
-    SimpleDateFormat inputFormat = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat mysqlFormat = new SimpleDateFormat("yyyy-MM-dd");
-
+    private boolean validateDate(String date) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        format.setLenient(false);
         try {
-            java.util.Date date = inputFormat.parse(dateString);
-            return mysqlFormat.format(date);
+            format.parse(date);
+            return true;
         } catch (ParseException e) {
-            return null;
-        }}
-    
-    private boolean validateDate(String dateString) {
-        return dateString.matches("\\d{2}/\\d{2}/\\d{4}");
+            return false;
+        }
     }
     
     private void clearForm(){
