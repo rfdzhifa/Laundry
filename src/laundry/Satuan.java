@@ -14,6 +14,7 @@ public class Satuan extends Service{
         super(serviceName, duration, price);
     }
     
+    @Override
     public double TotalPrice(double quantity) {
         return getPrice() * quantity;
     }

@@ -14,6 +14,7 @@ public class Kilo extends Service {
         super(serviceName, duration, price);
     }
 
+    @Override
     public double TotalPrice(double weight) {
         return getPrice() * weight;
     }

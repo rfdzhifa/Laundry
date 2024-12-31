@@ -110,7 +110,7 @@ public class Order extends javax.swing.JFrame {
         });
 
         jLabel5.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel5.setText("Date (yyy-mm-dd)");
+        jLabel5.setText("Date (yyyy-mm-dd)");
 
         jLabel6.setForeground(new java.awt.Color(51, 51, 51));
         jLabel6.setText("Status");
@@ -137,7 +137,7 @@ public class Order extends javax.swing.JFrame {
 
         lblDuration.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         lblDuration.setForeground(new java.awt.Color(0, 0, 153));
-        lblDuration.setText("1 Hari");
+        lblDuration.setText("0 Hari");
 
         btnHapus.setBackground(new java.awt.Color(204, 204, 204));
         btnHapus.setForeground(new java.awt.Color(51, 51, 51));
@@ -172,7 +172,7 @@ public class Order extends javax.swing.JFrame {
 
         lblPrice.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         lblPrice.setForeground(new java.awt.Color(0, 0, 153));
-        lblPrice.setText("Rp 10.000");
+        lblPrice.setText("0");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
